@@ -8,6 +8,7 @@ const init = async () => {
     const app = new App({
         target: document.body,
         props: {
+          wasm: gameOfLife,
           // https://svelte.dev/docs#Creating_a_component
           greet: gameOfLife.greet()
         }
