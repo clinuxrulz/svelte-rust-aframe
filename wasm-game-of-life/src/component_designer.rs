@@ -1,4 +1,2 @@
 #[derive(Clone)]
-pub struct ComponentDesigner {
-
-}
+pub struct ComponentDesigner {}

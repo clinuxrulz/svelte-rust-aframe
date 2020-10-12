@@ -1,14 +1,16 @@
 mod app;
 mod component_designer;
+mod dsc;
+mod polygon;
 mod utils;
 
 use app::{App, AppView};
 
 use js_sys::Function;
 use sodium_rust::Listener;
-use wasm_bindgen::prelude::*;
 use std::sync::Arc;
 use std::sync::Mutex;
+use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -22,7 +24,7 @@ pub fn greet() -> String {
 }
 
 pub struct UnsafeSendSync<A> {
-    pub value: A
+    pub value: A,
 }
 
 unsafe impl<A> Send for UnsafeSendSync<A> {}
@@ -35,7 +37,9 @@ pub fn new_app() -> *mut App {
 
 #[wasm_bindgen]
 pub fn drop_app(app: *mut App) {
-    unsafe { Box::from_raw(app); };
+    unsafe {
+        Box::from_raw(app);
+    };
 }
 
 #[wasm_bindgen]
@@ -45,11 +49,15 @@ pub fn app_c_current_view_listen(app: *mut App, callback: Function) -> *mut List
     let listener = app.c_current_view.listen_weak(move |app_view: &AppView| {
         match app_view {
             AppView::LogInOrRegister => {
-                callback.value.call1(&JsValue::UNDEFINED, &JsValue::from_f64(1f64));
-            },
+                callback
+                    .value
+                    .call1(&JsValue::UNDEFINED, &JsValue::from_f64(1f64));
+            }
             AppView::ComponentDesigner(_) => {
-                callback.value.call1(&JsValue::UNDEFINED, &JsValue::from_f64(2f64));
-            },
+                callback
+                    .value
+                    .call1(&JsValue::UNDEFINED, &JsValue::from_f64(2f64));
+            }
         };
     });
     Box::into_raw(Box::new(listener))
@@ -63,5 +71,7 @@ pub fn app_log_in(app: *mut App) {
 
 #[wasm_bindgen]
 pub fn drop_listener(listener: *mut Listener) {
-    unsafe { Box::from_raw(listener); };
+    unsafe {
+        Box::from_raw(listener);
+    };
 }

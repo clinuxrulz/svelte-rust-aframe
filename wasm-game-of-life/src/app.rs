@@ -12,7 +12,7 @@ pub enum AppView {
 pub struct App {
     pub sodium_ctx: SodiumCtx,
     pub c_current_view: Cell<AppView>,
-    cs_current_view: CellSink<AppView>
+    cs_current_view: CellSink<AppView>,
 }
 
 impl App {
@@ -27,6 +27,7 @@ impl App {
     }
 
     pub fn log_in(&mut self) {
-        self.cs_current_view.send(AppView::ComponentDesigner(ComponentDesigner {}));
+        self.cs_current_view
+            .send(AppView::ComponentDesigner(ComponentDesigner {}));
     }
 }
