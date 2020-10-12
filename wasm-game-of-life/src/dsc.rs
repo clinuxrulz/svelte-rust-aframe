@@ -3,6 +3,7 @@ use crate::sketch::HParam;
 
 use std::ops::Add;
 use std::ops::Mul;
+use std::ops::Neg;
 use std::ops::Sub;
 
 #[derive(Clone, Copy)]
@@ -246,6 +247,12 @@ impl Vector {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
+    pub fn direction_cosine_with(&self, mut b: Vector) -> f64 {
+        let a = self.with_magnitude(1.0);
+        b = b.with_magnitude(1.0);
+        a.dot(b)
+    }
+
     pub fn magnitude(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
@@ -275,6 +282,18 @@ impl Add for Vector {
     }
 }
 
+impl Sub for Vector {
+    type Output = Self;
+
+    fn sub(self, rhs: Vector) -> Self {
+        Vector {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
 impl Mul<f64> for Vector {
     type Output = Vector;
 
@@ -283,6 +302,18 @@ impl Mul<f64> for Vector {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
+        }
+    }
+}
+
+impl Neg for Vector {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        Vector {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
         }
     }
 }
