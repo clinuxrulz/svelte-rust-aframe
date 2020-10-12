@@ -44,11 +44,58 @@ impl Quaternion {
     }
 
     pub fn from_uv(u: Vector, v: Vector) -> Self {
-        unimplemented!();
+        let n = u.cross(v);
+        let q;
+        let tr = 1.0 + u.x + v.y + n.z;
+        if tr > 1e-4 {
+            let s = 2.0 * tr.sqrt();
+            q = Quaternion {
+                w: s / 4.0,
+                vx: (v.z - n.y) / s,
+                vy: (n.x - u.z) / s,
+                vz: (u.y - v.x) / s,
+            };
+        } else {
+            if u.x > v.y && u.x > n.z {
+                let s = 2.0 * (1.0 + u.x - v.y - n.z).sqrt();
+                q = Quaternion {
+                    w: (v.z - n.y) / s,
+                    vx: s / 4.0,
+                    vy: (u.y + v.x) / s,
+                    vz: (n.x + u.z) / s,
+                };
+            } else if v.y > n.z {
+                let s = 2.0 * (1.0 - u.x + v.y - n.z).sqrt();
+                q = Quaternion {
+                    w: (n.x - u.z) / s,
+                    vx: (u.y + v.x) / s,
+                    vy: s / 4.0,
+                    vz: (v.z + n.y) / s,
+                }
+            } else {
+                let s = 2.0 * (1.0 - u.x - v.y + n.z).sqrt();
+                q = Quaternion {
+                    w: (u.y - v.x) / s,
+                    vx: (n.x + u.z) / s,
+                    vy: (v.z + n.y) / s,
+                    vz: s / 4.0,
+                };
+            }
+        }
+
+        return q.with_magnitude(1.0);
     }
 
-    pub fn from_axis_angle(axis: Vector, dtheta: f64) -> Self {
-        unimplemented!();
+    pub fn from_axis_angle(mut axis: Vector, dtheta: f64) -> Self {
+        let c = (dtheta / 2.0).cos();
+        let s = (dtheta / 2.0).sin();
+        axis = axis.with_magnitude(s);
+        Quaternion {
+            w: c,
+            vx: axis.x,
+            vy: axis.y,
+            vz: axis.z,
+        }
     }
 
     pub fn magnitude(&self) -> f64 {
@@ -81,6 +128,47 @@ impl Quaternion {
             y: 2.0 * self.vy * self.vz - 2.0 * self.w * self.vx,
             z: self.w * self.w - self.vx * self.vx - self.vy * self.vy + self.vz * self.vz,
         }
+    }
+
+    pub fn rotate(&self, p: Vector) -> Vector {
+        self.rotation_u() * p.x + self.rotation_v() * p.y + self.rotation_n() * p.z
+    }
+
+    pub fn inverse(&self) -> Self {
+        (Quaternion {
+            w: self.w,
+            vx: -self.vx,
+            vy: -self.vy,
+            vz: -self.vz,
+        })
+        .with_magnitude(1.0)
+    }
+
+    pub fn to_the(&self, p: f64) -> Self {
+        if self.w >= 1.0f64 - 1e-6f64 {
+            return Quaternion::new(1.0, 0.0, 0.0, 0.0);
+        } else if self.w <= -1.0f64 + 1e-6f64 {
+            return Quaternion::new(-1.0, 0.0, 0.0, 0.0);
+        }
+
+        let mut axis = Vector::new(self.vx, self.vy, self.vz);
+        let mut theta = self.w.acos();
+        theta *= p;
+        axis = axis.with_magnitude(theta.sin());
+        Quaternion {
+            w: theta.cos(),
+            vx: axis.x,
+            vy: axis.y,
+            vz: axis.z,
+        }
+    }
+
+    pub fn mirror(&self) -> Self {
+        let mut u = self.rotation_u();
+        let mut v = self.rotation_v();
+        u = u * -1.0f64;
+        v = v * -1.0f64;
+        Quaternion::from_uv(u, v)
     }
 }
 
@@ -123,8 +211,78 @@ impl Mul<f64> for Quaternion {
     }
 }
 
+impl Mul<Quaternion> for Quaternion {
+    type Output = Quaternion;
+
+    fn mul(self, b: Self) -> Self {
+        let sa = self.w;
+        let sb = b.w;
+        let va = Vector::new(self.vx, self.vy, self.vz);
+        let vb = Vector::new(b.vx, b.vy, b.vz);
+        let vr = vb * sa + va * sb + va.cross(vb);
+        Quaternion {
+            w: sa * sb - va.dot(vb),
+            vx: vr.x,
+            vy: vr.y,
+            vz: vr.z,
+        }
+    }
+}
+
 impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vector { x, y, z }
+    }
+
+    pub fn cross(&self, rhs: Self) -> Self {
+        Vector {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.z,
+        }
+    }
+
+    pub fn dot(&self, rhs: Self) -> f64 {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+
+    pub fn magnitude(&self) -> f64 {
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+
+    pub fn with_magnitude(&self, v: f64) -> Vector {
+        let m = self.magnitude();
+        if m == 0.0f64 {
+            if v.abs() > 1e-100 {
+                panic!("Vector::with_magnatude(...) of zero vector!");
+            }
+            return Vector::new(0.0, 0.0, 0.0);
+        } else {
+            return *self * (v / m);
+        }
+    }
+}
+
+impl Add for Vector {
+    type Output = Self;
+
+    fn add(self, rhs: Vector) -> Self {
+        Vector {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl Mul<f64> for Vector {
+    type Output = Vector;
+
+    fn mul(self, rhs: f64) -> Self {
+        Vector {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+        }
     }
 }
