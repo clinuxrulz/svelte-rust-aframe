@@ -3,6 +3,8 @@ use sodium_rust::Cell;
 use sodium_rust::CellSink;
 use sodium_rust::SodiumCtx;
 
+pub struct Sketch {}
+
 #[derive(Clone)]
 pub enum AppView {
     LogInOrRegister,

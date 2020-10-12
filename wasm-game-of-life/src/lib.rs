@@ -2,6 +2,7 @@ mod app;
 mod component_designer;
 mod dsc;
 mod polygon;
+mod sketch;
 mod utils;
 
 use app::{App, AppView};
