@@ -262,6 +262,53 @@ impl Vector {
         a.dot(b)
     }
 
+    pub fn normal(&self, which: u32) -> Vector {
+        let mut n: Vector;
+        let xa = self.x.abs();
+        let ya = self.y.abs();
+        let za = self.z.abs();
+        if self.equals_with_def_tol(Vector::new(0.0, 0.0, 1.0)) {
+            n = Vector::new(1.0, 0.0, 0.0);
+        } else if xa < ya && xa < za {
+            n = Vector::new(0.0, self.z, -self.y);
+        } else if ya < za {
+            n = Vector::new(-self.z, 0.0, self.x);
+        } else {
+            n = Vector::new(self.y, -self.x, 0.0);
+        }
+        match which {
+            0 => {}
+            1 => {
+                n = self.cross(n);
+            }
+            _ => {
+                panic!("{}", "Unexpected vector normal index");
+            }
+        }
+        n.with_magnitude(1.0)
+    }
+
+    pub fn rotated_about_origin_axis(&self, origin: Vector, axis: Vector, theta: f64) -> Vector {
+        (*self - origin).rotated_about_axis(axis, theta) + origin
+    }
+
+    pub fn rotated_about_axis(&self, mut axis: Vector, theta: f64) -> Vector {
+        let c = theta.cos();
+        let s = theta.sin();
+        axis = axis.with_magnitude(1.0);
+        Vector::new(
+            (self.x) * (c + (1.0 - c) * (axis.x) * (axis.x))
+                + (self.y) * ((1.0 - c) * (axis.x) * (axis.y) - s * (axis.z))
+                + (self.z) * ((1.0 - c) * (axis.x) * (axis.z) + s * (axis.y)),
+            (self.x) * ((1.0 - c) * (axis.y) * (axis.x) + s * (axis.z))
+                + (self.y) * (c + (1.0 - c) * (axis.y) * (axis.y))
+                + (self.z) * ((1.0 - c) * (axis.y) * (axis.z) - s * (axis.x)),
+            (self.x) * ((1.0 - c) * (axis.z) * (axis.x) - s * (axis.y))
+                + (self.y) * ((1.0 - c) * (axis.z) * (axis.y) + s * (axis.x))
+                + (self.z) * (c + (1.0 - c) * (axis.z) * (axis.z)),
+        )
+    }
+
     pub fn mag_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -284,9 +331,15 @@ impl Vector {
 
     pub fn equals(&self, rhs: Self, tol: f64) -> bool {
         let dv: Vector = *self - rhs;
-        if dv.x.abs() > tol { return false; };
-        if dv.y.abs() > tol { return false; };
-        if dv.z.abs() > tol { return false; };
+        if dv.x.abs() > tol {
+            return false;
+        };
+        if dv.y.abs() > tol {
+            return false;
+        };
+        if dv.z.abs() > tol {
+            return false;
+        };
         return dv.mag_squared() < tol * tol;
     }
 
