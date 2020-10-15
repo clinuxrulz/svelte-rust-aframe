@@ -309,6 +309,37 @@ impl Vector {
         )
     }
 
+    pub fn dot_in_to_csys(&self, u: Vector, v: Vector, n: Vector) -> Vector {
+        Vector::new(self.dot(u), self.dot(v), self.dot(n))
+    }
+
+    pub fn scale_out_of_csys(&self, u: Vector, v: Vector, n: Vector) -> Vector {
+        u * self.x + v * self.y + n * self.z
+    }
+
+    pub fn in_perspective(
+        &self,
+        u: Vector,
+        v: Vector,
+        n: Vector,
+        origin: Vector,
+        camera_tan: f64,
+    ) -> Vector {
+        let mut r: Vector = (*self - origin).dot_in_to_csys(u, v, n);
+        let w = 1.0 - r.z * camera_tan;
+        r = r * (1.0 / w);
+        r
+    }
+
+    pub fn distance_to_line(&self, p0: Vector, dp: Vector) -> f64 {
+        let m = dp.magnitude();
+        (*self - p0).cross(dp).magnitude() / m
+    }
+
+    pub fn distance_to_plane(&self, normal: Vector, origin: Vector) -> f64 {
+        self.dot(normal) - origin.dot(normal)
+    }
+
     pub fn mag_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
