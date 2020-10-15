@@ -6,6 +6,11 @@ use std::ops::Mul;
 use std::ops::Neg;
 use std::ops::Sub;
 
+const ANGLE_COS_EPS: f64 = 1e-6;
+const LENGTH_EPS: f64 = 1e-6;
+const VERY_POSITIVE: f64 = 1e10;
+const VERY_NEGATIVE: f64 = -1e10;
+
 #[derive(Clone, Copy)]
 pub struct Quaternion {
     pub w: f64,
@@ -235,6 +240,10 @@ impl Vector {
         Vector { x, y, z }
     }
 
+    pub fn from_hparams(x: HParam, y: HParam, z: HParam) -> Self {
+        unimplemented!();
+    }
+
     pub fn cross(&self, rhs: Self) -> Self {
         Vector {
             x: self.y * rhs.z - self.z * rhs.y,
@@ -253,6 +262,10 @@ impl Vector {
         a.dot(b)
     }
 
+    pub fn mag_squared(&self) -> f64 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
     pub fn magnitude(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
@@ -267,6 +280,18 @@ impl Vector {
         } else {
             return *self * (v / m);
         }
+    }
+
+    pub fn equals(&self, rhs: Self, tol: f64) -> bool {
+        let dv: Vector = *self - rhs;
+        if dv.x.abs() > tol { return false; };
+        if dv.y.abs() > tol { return false; };
+        if dv.z.abs() > tol { return false; };
+        return dv.mag_squared() < tol * tol;
+    }
+
+    pub fn equals_with_def_tol(&self, rhs: Self) -> bool {
+        self.equals(rhs, LENGTH_EPS)
     }
 }
 
