@@ -1,3 +1,6 @@
+use crate::dsc::{Quaternion, RgbaColor};
+use std::collections::HashMap;
+
 #[derive(Copy, Clone)]
 pub enum PolyError {
     Good = 0,
@@ -46,9 +49,143 @@ pub struct EntityId {
     pub v: u32,
 }
 
+#[derive(Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct EntityKey {
     pub input: HEntity,
     pub copy_number: i32,
+}
+
+pub type EntityMap = HashMap<EntityKey, EntityId>;
+
+pub enum GroupCopyAs {
+    Numeric,
+    NTrans,
+    NRotAA,
+    NRotTrans,
+    NRotAxisTrans,
+}
+
+pub enum GroupType {
+    Drawing3D = 5000,
+    DrawingWorkplane = 5001,
+    Extrude = 5100,
+    Lathe = 5101,
+    Revolve = 5102,
+    Helix = 5103,
+    Rotate = 5200,
+    Translate = 5201,
+    Linked = 5300,
+}
+
+pub struct GroupSolved {
+    pub how: SolveResult,
+    pub dof: i32,
+    pub find_to_fix_timeout: i32,
+    pub timeout: bool,
+    pub remove: Vec<HConstraint>,
+}
+
+pub enum GroupSubtype {
+    WorkplaneByPointOrtho = 6000,
+    WorkplaneByLineSegments = 6001,
+    OneSided = 7000,
+    TwoSided = 7001,
+}
+
+pub struct GroupPredef {
+    pub q: Quaternion,
+    pub origin: HEntity,
+    pub entity_b: HEntity,
+    pub entity_c: HEntity,
+    pub swap_uv: bool,
+    pub negate_u: bool,
+    pub negate_v: bool,
+}
+
+pub struct GroupPolyError {
+    pub how: PolyError,
+    pub not_closed_at: SEdge,
+    error_point_at: Vector,
+}
+
+pub enum GroupCombineAs {
+    Union = 0,
+    Difference = 1,
+    Assemble = 2,
+    Intersection = 3,
+}
+
+pub enum GroupRemap {
+    Last = 1000,
+    Top = 1001,
+    Bottom = 1002,
+    PtToLine = 1003,
+    LineToFace = 1004,
+    LatheStart = 1006,
+    LatheEnd = 1007,
+    PtToArc = 1008,
+    PtToNormal = 1009,
+    LatheArcCenter = 1010,
+}
+
+pub struct Group {
+    pub tag: i32,
+    pub h: HGroup,
+    pub type_: GroupType,
+    pub order: i32,
+
+    pub op_a: HGroup,
+    pub op_b: HGroup,
+    pub visible: bool,
+    pub suppress: bool,
+    pub relaxConstraints: bool,
+    pub allow_redundant: bool,
+    pub all_dims_reference: bool,
+    pub scale: f64,
+
+    pub clean: bool,
+    pub dof_check_ok: bool,
+    pub active_workplane: HEntity,
+    pub val_a: f64,
+    pub val_b: f64,
+    pub val_c: f64,
+    pub color: RgbaColor,
+
+    pub solved: GroupSolved,
+    pub subtype: GroupSubtype,
+
+    pub skip_first: bool,
+
+    pub predef: GroupPredef,
+    pub poly_loops: SPolygon,
+    pub bezier_loops: SBezierLoopSetSet,
+    pub bezier_opens: SBezierLoopSet,
+    pub poly_error: GroupPolyError,
+
+    pub boolean_failed: bool,
+
+    pub this_shell: SShell,
+    pub running_shell: SShell,
+
+    pub this_mesh: SMesh,
+    pub running_mesh: SMesh,
+
+    pub display_dirty: bool,
+    pub display_mesh: SMesh,
+    pub display_outlines: SOutlineList,
+    pub mesh_combine: GroupCombineAs,
+
+    pub force_to_mesh: bool,
+
+    pub remap: EntityMap,
+
+    pub link_file: PlatformPath,
+
+    pub imp_mesh: SMesh,
+    pub imp_shell: SShell,
+    pub imp_entity: EntityList,
+
+    pub name: String,
 }
 
 #[derive(Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq)]
