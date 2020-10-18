@@ -1,6 +1,54 @@
+#[derive(Copy, Clone)]
+pub enum PolyError {
+    Good = 0,
+    NotClosed = 1,
+    NotCoplaner = 2,
+    SelfIntersecting = 3,
+    ZeroLenEdge = 4,
+}
+
+pub enum StripplePattern {
+    Continuous = 0,
+    ShortDash = 1,
+    Dash = 2,
+    LongDash = 3,
+    DashDot = 4,
+    DashDotDot = 5,
+    Dot = 6,
+    Freehand = 7,
+    Zigzag = 8,
+}
+
+const STRIPPLE_PATTERN_LAST: StripplePattern = StripplePattern::Zigzag;
+
+#[derive(Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq)]
+pub struct HGroup {
+    pub v: u32,
+}
+
+#[derive(Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq)]
+pub struct HRequest {
+    pub v: u32,
+}
+
 #[derive(Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq)]
 pub struct HParam {
     pub v: u32,
+}
+
+#[derive(Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq)]
+pub struct HStyle {
+    pub v: u32,
+}
+
+#[derive(Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq)]
+pub struct EntityId {
+    pub v: u32,
+}
+
+pub struct EntityKey {
+    pub input: HEntity,
+    pub copy_number: i32,
 }
 
 #[derive(Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq)]
